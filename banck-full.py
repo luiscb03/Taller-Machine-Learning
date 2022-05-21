@@ -1,11 +1,18 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import KFold
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
+from sklearn.metrics import f1_score
 
 url = 'bank-full.csv'
 data = pd.read_csv(url)
@@ -152,4 +159,58 @@ print(f'accuracy de Test de Entrenamiento: {rf.score(x_test, y_test)}')
 # Accuracy de Validación
 print(f'accuracy de Validación: {rf.score(x_test_out, y_test_out)}')
 
+#----------------------
+
+
+# Validacion cruzada RANDOM FOREST
+
+kfold = KFold(n_splits=5)
+
+acc_scores_train_train = []
+acc_scores_test_train = []
+rf = RandomForestClassifier()
+
+for train, test in kfold.split(x, y):
+    rf.fit(x[train], y[train])
+    scores_train_train = rf.score(x[train], y[train])
+    scores_test_train = rf.score(x[test], y[test])
+    acc_scores_train_train.append(scores_train_train)
+    acc_scores_test_train.append(scores_test_train)
+    
+y_pred = rf.predict(x_test_out)
+    
+
+print('*'*50)
+print('Random Forest Validacion Cruzada')
+
+# Accuracy de Entrenamiento de Entrenamiento
+print(f'accuracy de Entrenamiento de Entrenamiento: {np.array(acc_scores_train_train).mean()}')
+
+# Accuracy de Test de Entrenamiento
+print(f'accuracy de Test de Entrenamiento: {np.array(acc_scores_test_train).mean()}')
+
+# Accuracy de Validación
+print(f'accuracy de Validación: {rf.score(x_test_out, y_test_out)}')
+
+# Matriz de confusión
+print('*'*50)
+print(f'Matriz de confusión: {confusion_matrix(y_test_out, y_pred)}')
+
+matriz_confusion = confusion_matrix(y_test_out, y_pred)
+plt.figure(figsize = (6, 6))
+sns.heatmap(matriz_confusion)
+plt.title("Matriz de confusión")
+
+# Metricas
+precision = precision_score(y_test_out, y_pred, average=None).mean()
+print(f'Precisión: {precision}')
+
+recall = recall_score(y_test_out, y_pred, average=None).mean()
+print(f'Re-call: {recall}')
+
+f1 = f1_score(y_test_out, y_pred, average=None).mean()
+print(f'f1: {f1}')
+
+print(f'y real: {y_test_out}')
+print(f'y predicho: {y_pred}')
 
